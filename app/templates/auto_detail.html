@@ -321,14 +321,14 @@
                                                                         </div>
                                                                         <div
                                                                             class="col-lg-12 col-sm-12 mob-product-btn">
-                                                                            <form action="" method="post"
+                                                                            <form action="/auto_rental/{{id_auto}}" method="post"
                                                                                 class="d-inline-block">
-                                                                                <button type="button"
+                                                                                <button type="submit"
                                                                                     class="btn btn-success waves-effect waves-light m-r-20">
                                                                                     <i
                                                                                         class="icofont icofont-cart-alt f-16"></i>
                                                                                     <span
-                                                                                        class="m-l-10">Арендовать</span>
+                                                                                        class="m-l-10">{{ button_name }}</span>
                                                                                 </button>
                                                                             </form>
                                                                             <form action="/correct_auto/{{id_auto}}" method="post"

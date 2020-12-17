@@ -1,5 +1,5 @@
 from app import app, db
-from app.models import Auto, Journal
+from app.models import Auto#, Journal
 from flask import render_template, request
 from datetime import datetime
 
@@ -42,7 +42,7 @@ def create_auto():
         transmission_auto = request.form['transmission']
 
         # Добавляем автомобиль в базу данных Auto
-        db.session.add(Auto(name=name_auto, price=rent_price, description=description_auto, transmission=transmission_auto, img_url=img_auto))
+        db.session.add(Auto(name=name_auto, price=rent_price, description=description_auto, transmission=transmission_auto, img_url=img_auto, dostup='Свободен'))
 
         # сохраняем изменения в базе
         db.session.commit()
@@ -75,7 +75,7 @@ def correct_auto(id_auto):
             'id_auto': auto.id,
             'name_auto': auto.name,
             'price': auto.price,
-            'in_rent_or_free': "Свободен пока",#dostup,
+            'in_rent_or_free': auto.dostup,
             'auto_transmission': auto.transmission,
             'auto_description': auto.description,
             'img_url': auto.img_url,
@@ -89,17 +89,17 @@ def correct_auto(id_auto):
 def auto_detail(id_auto):
     
     auto = Auto.query.get(id_auto)
+    #journal = Journal.query.get(auto_info.auto.id)
 
     context = None
 
-    dostup = "Свободен"
     if request.method == 'POST':
 
         new_name = request.form['name']
         new_price = request.form['price']
         new_description = request.form['description']
         new_transmission = request.form['transmission']
-        dostup = request.form['in_rent_or_free']
+        #dostup = request.form['in_rent_or_free']
         new_img_url = request.form['new_img_url']
 
         if new_name:
@@ -118,14 +118,16 @@ def auto_detail(id_auto):
             auto.img_url = request.form['new_img_url']
 
         if request.form['in_rent_or_free']:
-            dostup = request.form['in_rent_or_free']
+            auto.dostup = request.form['in_rent_or_free']
             
         db.session.commit()
 
      
-
-    #age_seconds = (datetime.now() - product.created).seconds
-    #age = divmod(age_seconds, 60)
+    if auto.dostup == 'Свободен':
+        button_name = 'Арендовать'
+    else:
+        button_name = 'Освободить' 
+    
     img_url = auto.img_url[:6]
     k = int(auto.img_url[6])
    
@@ -133,16 +135,59 @@ def auto_detail(id_auto):
         'id_auto': auto.id,
         'name_auto': auto.name,
         'price': auto.price,
-        'in_rent_or_free': dostup,
+        'in_rent_or_free': auto.dostup,
         'yes_or_not': auto.transmission,
         'auto_description': auto.description,
         'img_url_1': auto.img_url,
         'img_url_2': img_url + str((k+1)//5 + (k+1)%5) + '.jpg',
         'img_url_3': img_url + str((k+2)//5 + (k+2)%5) + '.jpg',
         'img_url_4': img_url + str((k+3)//5 + (k+3)%5) + '.jpg',
+        'button_name': button_name,
     }   
        
     return render_template('auto_detail.html', **context)
+
+@app.route('/auto_rental/<int:id_auto>', methods=['POST', 'GET'])
+def auto_rental(id_auto):
+
+    auto = Auto.query.get(id_auto)
+    #journal = Journal.query.get(auto_info.auto.id)
+    img_url = auto.img_url[:6]
+    k = int(auto.img_url[6])
+
+    context = None
+
+    if request.method == 'POST':
+        
+        if auto.dostup == 'Свободен':
+            auto.dostup = 'Занят'
+            button_name = 'Освободить'
+        else:
+            auto.dostup = 'Свободен'
+            button_name = 'Арендовать' 
+    #age_seconds = (datetime.now() - product.created).seconds
+    #age = divmod(age_seconds, 60)
+    #img_url = auto.img_url[:6]
+    #k = int(auto.img_url[6])
+        db.session.commit()
+
+
+    context = {
+        'id_auto': auto.id,
+        'name_auto': auto.name,
+        'price': auto.price,
+        'in_rent_or_free': auto.dostup,
+        'yes_or_not': auto.transmission,
+        'auto_description': auto.description,
+        'img_url_1': auto.img_url,
+        'img_url_2': img_url + str((k+1)//5 + (k+1)%5) + '.jpg',
+        'img_url_3': img_url + str((k+2)//5 + (k+2)%5) + '.jpg',
+        'img_url_4': img_url + str((k+3)//5 + (k+3)%5) + '.jpg',
+        'button_name': button_name,
+    }   
+       
+    return render_template('auto_detail.html', **context)
+
 
 
 @app.route('/del_auto/<int:id_auto>', methods=['POST', 'GET'])
