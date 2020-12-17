@@ -1,5 +1,5 @@
 from app import app, db
-from app.models import Auto #, Journal
+from app.models import Auto, Journal
 from flask import render_template, request
 from datetime import datetime
 
@@ -14,7 +14,6 @@ def index():
     # Полученные наборы передаем в контекст
     context = {'auto_list': auto_list}
       
-
     return render_template('index.html', **context)
 
 
@@ -27,11 +26,6 @@ def create_auto():
     if request.method == 'POST':
         
         # Пришел запрос с методом POST (пользователь нажал на кнопку 'Добавить авто')
-        # Если пришел запрос на изменение, то сначала удаляем старую версию с таким id
-        # if request.form['id']:
-        #     id_auto = request.form['id']
-        #     auto = Auto.query.get(id_auto)
-        #     db.session.delete(auto)
         # Получаем название товара - это значение поля input с атрибутом name="name"
         name_auto = request.form['name']
 
@@ -43,8 +37,6 @@ def create_auto():
 
         # Получаем описание автомобиля - это значение поля input с атрибутом name="img_url"
         img_auto = request.form['img_url']
-
-
 
         # Получаем тип корбки передач автомобиля - это значение поля input с атрибутом name="transmission"
         transmission_auto = request.form['transmission']
@@ -63,23 +55,13 @@ def create_auto():
             # 'description': description_auto,
             # 'transmission': transmission_auto,
             'img_url':img_auto
-            # 'id_auto': auto.id,
-            # 'name_auto': auto.name,
-            # 'price': auto.price,
-            # 'in_rent_or_free': "Свободен",
-            # 'yes_or_not': auto.transmission,
-            # 'auto_description': auto.description,
         }
         return render_template('add_auto.html', **context)
 
     elif request.method == 'GET':
         # Пришел запрос с методом GET - пользователь просто открыл в браузере страницу по адресу http://127.0.0.1:5000/create_auto
-        # В этом случае просто передаем в контекст имя метода
-        # context = {
-        #     'method': 'GET',
-        # }
-
-        return render_template('create_auto.html')#, **context)
+        # В этом случае ничего не делаем
+        return render_template('create_auto.html')
 
 
 @app.route('/correct_auto/<int:id_auto>', methods=['POST', 'GET'])
@@ -108,12 +90,10 @@ def auto_detail(id_auto):
     
     auto = Auto.query.get(id_auto)
 
-
     context = None
 
-    dostup = "Свободен пока"
+    dostup = "Свободен"
     if request.method == 'POST':
-
 
         new_name = request.form['name']
         new_price = request.form['price']
@@ -121,7 +101,6 @@ def auto_detail(id_auto):
         new_transmission = request.form['transmission']
         dostup = request.form['in_rent_or_free']
         new_img_url = request.form['new_img_url']
-
 
         if new_name:
             auto.name = request.form['name']
@@ -143,8 +122,7 @@ def auto_detail(id_auto):
             
         db.session.commit()
 
-    
-   
+     
 
     #age_seconds = (datetime.now() - product.created).seconds
     #age = divmod(age_seconds, 60)
@@ -178,10 +156,6 @@ def del_auto(id_auto):
     db.session.commit()
 
     return render_template('del_auto.html', **context)
-
-
-
-
 
 
 
