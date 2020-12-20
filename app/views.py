@@ -7,53 +7,42 @@ from datetime import datetime
 @app.route('/index')
 @app.route('/')
 def index():
-    
     # Получаем все записи из таблицы Auto
     auto_list = Auto.query.all()
-
     # Полученные наборы передаем в контекст
     context = {'auto_list': auto_list}
-      
     return render_template('index.html', **context)
 
 
 
 @app.route('/create_auto', methods=['POST', 'GET'])
 def create_auto():
-
     context = None
-
     if request.method == 'POST':
-        
         # Пришел запрос с методом POST (пользователь нажал на кнопку 'Добавить авто')
         # Получаем название товара - это значение поля input с атрибутом name="name"
         name_auto = request.form['name']
-
         # Получаем стоимость аренды в минуту - это значение поля input с атрибутом name="price"
         rent_price = request.form['price']
-
         # Получаем описание автомобиля - это значение поля input с атрибутом name="description"
         description_auto = request.form['description']
-
         # Получаем описание автомобиля - это значение поля input с атрибутом name="img_url"
         img_auto = request.form['img_url']
-
         # Получаем тип корбки передач автомобиля - это значение поля input с атрибутом name="transmission"
         transmission_auto = request.form['transmission']
-
         # Добавляем автомобиль в базу данных Auto
         db.session.add(Auto(name=name_auto, price=rent_price, description=description_auto, transmission=transmission_auto, img_url=img_auto, dostup='Свободен'))
-
         # сохраняем изменения в базе
         db.session.commit()
-
         #Заполняем словарь контекста
         context = {
-            'name': name_auto,
-            'img_url':img_auto
+            'name_auto': name_auto,
+            'auto_description': description_auto,
+            'img_url': img_auto,
+            'transmission': transmission_auto,
+            'price': rent_price,
         }
         return render_template('add_auto.html', **context)
-
     elif request.method == 'GET':
         # Пришел запрос с методом GET - пользователь просто открыл в браузере страницу по адресу http://127.0.0.1:5000/create_auto
         # В этом случае ничего не делаем
@@ -63,11 +52,8 @@ def create_auto():
 
 @app.route('/correct_auto/<int:id_auto>', methods=['POST', 'GET'])
 def correct_auto(id_auto):
-
     if request.method == 'POST':
         auto = Auto.query.get(id_auto)
-
-    
         context = {
             'id_auto': auto.id,
             'name_auto': auto.name,
@@ -83,49 +69,35 @@ def correct_auto(id_auto):
 
 @app.route('/auto_detail/<int:id_auto>', methods=['POST', 'GET'])
 def auto_detail(id_auto):
-    
     auto = Auto.query.get(id_auto)
-       
     context = None
-
     if request.method == 'POST':
-
         new_name = request.form['name']
         new_price = request.form['price']
         new_description = request.form['description']
         new_transmission = request.form['transmission']
         new_img_url = request.form['new_img_url']
-
         if new_name:
             auto.name = request.form['name']
-        
         if new_price:
             auto.price = request.form['price']
-
         if new_description:
             auto.description = request.form['description']
-
         if new_transmission:
             auto.transmission = request.form['transmission'] 
-
         if new_img_url:
             auto.img_url = request.form['new_img_url']
-
         if request.form['in_rent_or_free']:
             auto.dostup = request.form['in_rent_or_free']
-            
         db.session.commit()
-
      
     if auto.dostup == 'Свободен':
         button_name = 'Арендовать'
     else:
         button_name = 'Освободить' 
-    
     img_url = auto.img_url[:6]
     k = int(auto.img_url[6])
     journal = Journal.query.filter_by(auto_info=id_auto).all()
-   
     context = {
         'id_auto': auto.id,
         'name_auto': auto.name,
@@ -146,38 +118,30 @@ def auto_detail(id_auto):
 
 @app.route('/auto_rental/<int:id_auto>', methods=['POST', 'GET'])
 def auto_rental(id_auto):
-
     auto = Auto.query.get(id_auto)
-    
     img_url = auto.img_url[:6]
     k = int(auto.img_url[6])
     dt = datetime.now()
-    
-   
     if request.method == 'POST':
-        
+        journal = Journal.query.filter_by(auto_info=id_auto).all()
         if auto.dostup == 'Свободен':
             auto.dostup = 'Занят'
             button_name = 'Освободить'
-            if not Journal.query.filter_by(auto_info=id_auto).first():
+            if not journal:
                 db.session.add(Journal(auto_info=id_auto, time_begin=dt, time_end=None, cost=0, quantity=1, time_total=0, cost_total=0))
-                journal = Journal.query.filter_by(auto_info=id_auto).all()
             else:
-                journal = Journal.query.filter_by(auto_info=id_auto).all()
                 db.session.add(Journal(auto_info=id_auto, time_begin=dt, time_end=None, cost=0, quantity=journal[-1].quantity+1, time_total=journal[-1].time_total, cost_total=journal[-1].cost_total))
         else:
             auto.dostup = 'Свободен'
             button_name = 'Арендовать' 
-            journal = Journal.query.filter_by(auto_info=id_auto).all()
             journal[-1].time_end = dt
             journal[-1].time_total +=(dt - journal[-1].time_begin).seconds //60
             journal[-1].cost = ((dt - journal[-1].time_begin).seconds //60) * auto.price
             if journal[-1].cost == 0:
                 journal[-1].cost = auto.price
             journal[-1].cost_total +=journal[-1].cost
-
     db.session.commit()
-
+    journal = Journal.query.filter_by(auto_info=id_auto).all()
     context = {
         'id_auto': auto.id,
         'name_auto': auto.name,
@@ -198,16 +162,20 @@ def auto_rental(id_auto):
 
 @app.route('/del_auto/<int:id_auto>', methods=['POST', 'GET'])
 def del_auto(id_auto):
-    
     auto = Auto.query.get(id_auto)
     journal = Journal.query.filter_by(auto_info=id_auto).all()
-    context = {'name_auto_del': auto.name}
-    
-    #db.session.delete(journal)         
+    context = {
+        'name_auto': auto.name,
+        'auto_description': auto.description,
+        'img_url': auto.img_url,
+        'transmission': auto.transmission,
+        'price': auto.price,
+    }
+    for row in journal:
+        db.session.delete(row)         
     db.session.delete(auto)
     db.session.commit()
-
-    return render_template('del_auto.html', **context)
+    return render_template('delete_auto.html', **context)
 
 
 
@@ -224,7 +192,7 @@ def rental_log():
             journal_auto.append(journal_line.quantity)
             journal_auto.append(journal_line.time_total)
             journal_auto.append(journal_line.cost_total)
-        journal_total.append(journal_auto)
+            journal_total.append(journal_auto)
     context = {'journal_total': journal_total}
     return render_template('rental_log.html', **context)
 

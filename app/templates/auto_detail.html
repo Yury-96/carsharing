@@ -383,16 +383,16 @@
                                                                     <th scope="col">#</th>
                                                                     <th scope="col">Дата начала аренды</th>
                                                                     <th scope="col">Дата завершения аренды</th>
-                                                                    <th scope="col">Общая стоимость аренды</th>
+                                                                    <th scope="col">Cтоимость аренды</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {% for element in journal_list %}
+                                                                {% for i in journal_list %}
                                                                 <tr>
-                                                                    <th scope="row">1</th>
-                                                                    <td>{{ element.time_begin }}</td>
-                                                                    <td>{{ element.time_end }}</td>
-                                                                    <td>{{ element.cost }}</td>
+                                                                    <th scope="row">{{ loop.index }}</th>
+                                                                    <td>{{ i.time_begin }}</td>
+                                                                    <td>{{ i.time_end }}</td>
+                                                                    <td>{{ i.cost }}</td>
                                                                 </tr>
                                                                 {% endfor %}
                                                                 
