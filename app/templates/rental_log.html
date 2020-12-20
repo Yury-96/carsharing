@@ -241,20 +241,22 @@
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
+                                                                            {% for element in journal_total %}
                                                                             <tr>
                                                                                 <td class="pro-list-img">
-                                                                                    <img src="/assets/images/auto/auto1_1.jpg"
+                                                                                    <img src="/assets/images/auto/{{element[0]}}"
                                                                                         class="img-fluid" alt="tbl"
                                                                                         style="max-width: 64px;">
                                                                                 </td>
                                                                                 <td class="pro-name">
-                                                                                    <h6>{{ name_auto }}</h6>
+                                                                                    <h6>{{ element[1] }}</h6>
                                                                                     <span>{{ description_auto }}</span>
                                                                                 </td>
-                                                                                <td>{{ n }}</td>
-                                                                                <td>{{ n }}</td>
-                                                                                <td>{{ n }}</td>
+                                                                                <td>{{ element[2] }}</td>
+                                                                                <td>{{ element[3] }}</td>
+                                                                                <td>{{ element[4] }}</td>
                                                                             </tr>
+                                                                            {% endfor %}
                                                                         </tbody>
                                                                     </table>
                                                                 </div>

@@ -387,18 +387,15 @@
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
+                                                                {% for element in journal_list %}
                                                                 <tr>
                                                                     <th scope="row">1</th>
-                                                                    <td>{{ date_and_time_rent_bigin }}</td>
-                                                                    <td>{{ date_and_time_rent_end }}</td>
-                                                                    <td>{{ total_cost_of_rent }}</td>
+                                                                    <td>{{ element.time_begin }}</td>
+                                                                    <td>{{ element.time_end }}</td>
+                                                                    <td>{{ element.cost }}</td>
                                                                 </tr>
-                                                                <tr>
-                                                                    <th scope="row">2</th>
-                                                                    <td>{{ date_and_time_rent_bigin }}</td>
-                                                                    <td>{{ date_and_time_rent_end }}</td>
-                                                                    <td>{{ total_cost_of_rent }}</td>
-                                                                </tr>
+                                                                {% endfor %}
+                                                                
                                                             </tbody>
                                                         </table>
                                                     </div>

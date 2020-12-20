@@ -1,5 +1,5 @@
 from app import app, db
-from app.models import Auto#, Journal
+from app.models import Auto, Journal
 from flask import render_template, request
 from datetime import datetime
 
@@ -49,11 +49,7 @@ def create_auto():
 
         #Заполняем словарь контекста
         context = {
-            #'method': 'POST',
             'name': name_auto,
-            # 'price': rent_price,
-            # 'description': description_auto,
-            # 'transmission': transmission_auto,
             'img_url':img_auto
         }
         return render_template('add_auto.html', **context)
@@ -62,6 +58,7 @@ def create_auto():
         # Пришел запрос с методом GET - пользователь просто открыл в браузере страницу по адресу http://127.0.0.1:5000/create_auto
         # В этом случае ничего не делаем
         return render_template('create_auto.html')
+
 
 
 @app.route('/correct_auto/<int:id_auto>', methods=['POST', 'GET'])
@@ -84,13 +81,11 @@ def correct_auto(id_auto):
 
    
 
-
 @app.route('/auto_detail/<int:id_auto>', methods=['POST', 'GET'])
 def auto_detail(id_auto):
     
     auto = Auto.query.get(id_auto)
-    #journal = Journal.query.get(auto_info.auto.id)
-
+       
     context = None
 
     if request.method == 'POST':
@@ -99,7 +94,6 @@ def auto_detail(id_auto):
         new_price = request.form['price']
         new_description = request.form['description']
         new_transmission = request.form['transmission']
-        #dostup = request.form['in_rent_or_free']
         new_img_url = request.form['new_img_url']
 
         if new_name:
@@ -130,6 +124,7 @@ def auto_detail(id_auto):
     
     img_url = auto.img_url[:6]
     k = int(auto.img_url[6])
+    journal = Journal.query.filter_by(auto_info=id_auto).all()
    
     context = {
         'id_auto': auto.id,
@@ -143,34 +138,45 @@ def auto_detail(id_auto):
         'img_url_3': img_url + str((k+2)//5 + (k+2)%5) + '.jpg',
         'img_url_4': img_url + str((k+3)//5 + (k+3)%5) + '.jpg',
         'button_name': button_name,
+        'journal_list': journal
     }   
-       
     return render_template('auto_detail.html', **context)
+
+
 
 @app.route('/auto_rental/<int:id_auto>', methods=['POST', 'GET'])
 def auto_rental(id_auto):
 
     auto = Auto.query.get(id_auto)
-    #journal = Journal.query.get(auto_info.auto.id)
+    
     img_url = auto.img_url[:6]
     k = int(auto.img_url[6])
-
-    context = None
-
+    dt = datetime.now()
+    
+   
     if request.method == 'POST':
         
         if auto.dostup == 'Свободен':
             auto.dostup = 'Занят'
             button_name = 'Освободить'
+            if not Journal.query.filter_by(auto_info=id_auto).first():
+                db.session.add(Journal(auto_info=id_auto, time_begin=dt, time_end=None, cost=0, quantity=1, time_total=0, cost_total=0))
+                journal = Journal.query.filter_by(auto_info=id_auto).all()
+            else:
+                journal = Journal.query.filter_by(auto_info=id_auto).all()
+                db.session.add(Journal(auto_info=id_auto, time_begin=dt, time_end=None, cost=0, quantity=journal[-1].quantity+1, time_total=journal[-1].time_total, cost_total=journal[-1].cost_total))
         else:
             auto.dostup = 'Свободен'
             button_name = 'Арендовать' 
-    #age_seconds = (datetime.now() - product.created).seconds
-    #age = divmod(age_seconds, 60)
-    #img_url = auto.img_url[:6]
-    #k = int(auto.img_url[6])
-        db.session.commit()
+            journal = Journal.query.filter_by(auto_info=id_auto).all()
+            journal[-1].time_end = dt
+            journal[-1].time_total +=(dt - journal[-1].time_begin).seconds //60
+            journal[-1].cost = ((dt - journal[-1].time_begin).seconds //60) * auto.price
+            if journal[-1].cost == 0:
+                journal[-1].cost = auto.price
+            journal[-1].cost_total +=journal[-1].cost
 
+    db.session.commit()
 
     context = {
         'id_auto': auto.id,
@@ -184,8 +190,8 @@ def auto_rental(id_auto):
         'img_url_3': img_url + str((k+2)//5 + (k+2)%5) + '.jpg',
         'img_url_4': img_url + str((k+3)//5 + (k+3)%5) + '.jpg',
         'button_name': button_name,
+        'journal_list': journal
     }   
-       
     return render_template('auto_detail.html', **context)
 
 
@@ -194,9 +200,10 @@ def auto_rental(id_auto):
 def del_auto(id_auto):
     
     auto = Auto.query.get(id_auto)
-
+    journal = Journal.query.filter_by(auto_info=id_auto).all()
     context = {'name_auto_del': auto.name}
-             
+    
+    #db.session.delete(journal)         
     db.session.delete(auto)
     db.session.commit()
 
@@ -204,10 +211,22 @@ def del_auto(id_auto):
 
 
 
-
 @app.route('/rental_log')
 def rental_log():
-    return render_template('rental_log.html')
+    journal_total = []
+    auto_list = Auto.query.all()
+    for auto in auto_list:
+        journal_auto = []
+        if Journal.query.filter_by(auto_info=auto.id).first():
+            journal_line = Journal.query.filter_by(auto_info=auto.id)[-1]
+            journal_auto.append(auto.img_url)
+            journal_auto.append(auto.name)
+            journal_auto.append(journal_line.quantity)
+            journal_auto.append(journal_line.time_total)
+            journal_auto.append(journal_line.cost_total)
+        journal_total.append(journal_auto)
+    context = {'journal_total': journal_total}
+    return render_template('rental_log.html', **context)
 
 
 
