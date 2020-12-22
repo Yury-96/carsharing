@@ -253,8 +253,8 @@
                                                                                     <span>{{ element[1] }}</span>
                                                                                 </td>
                                                                                 <td>{{ element[2] }}</td>
-                                                                                <td>{{ element[3] }}</td>
-                                                                                <td>{{ element[4] }}</td>
+                                                                                <td>{{ element[3]//60 }} час.  {{ element[3]%60 }} мин.</td>
+                                                                                <td>{{ element[4] }} рублей</td>
                                                                             </tr>
                                                                             {% endfor %}
                                                                         </tbody>

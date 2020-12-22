@@ -72,23 +72,12 @@ def auto_detail(id_auto):
     auto = Auto.query.get(id_auto)
     context = None
     if request.method == 'POST':
-        new_name = request.form['name']
-        new_price = request.form['price']
-        new_description = request.form['description']
-        new_transmission = request.form['transmission']
-        new_img_url = request.form['new_img_url']
-        if new_name:
-            auto.name = request.form['name']
-        if new_price:
-            auto.price = request.form['price']
-        if new_description:
-            auto.description = request.form['description']
-        if new_transmission:
-            auto.transmission = request.form['transmission'] 
-        if new_img_url:
-            auto.img_url = request.form['new_img_url']
-        if request.form['in_rent_or_free']:
-            auto.dostup = request.form['in_rent_or_free']
+        auto.name = request.form['name']
+        auto.price = request.form['price']
+        auto.description = request.form['description']
+        auto.transmission = request.form['transmission']
+        auto.img_url = request.form['new_img_url']
+        
         db.session.commit()
      
     if auto.dostup == 'Свободен':
