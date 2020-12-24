@@ -390,8 +390,8 @@
                                                                 {% for i in journal_list %}
                                                                 <tr>
                                                                     <th scope="row">{{ loop.index }}</th>
-                                                                    <td>{{ i.time_begin }}</td>
-                                                                    <td>{{ i.time_end }}</td>
+                                                                    <td>{{ i.time_begin.strftime("%d.%m.%y %I:%M") }}</td>
+                                                                    <td>{{ None if i.time_end == None else i.time_end.strftime("%d.%m.%y %I:%M") }}</td>
                                                                     <td>{{ i.cost }}</td>
                                                                 </tr>
                                                                 {% endfor %}

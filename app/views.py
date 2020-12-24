@@ -2,6 +2,7 @@ from app import app, db
 from app.models import Auto, Journal
 from flask import render_template, request
 from datetime import datetime
+import os
 
 
 @app.route('/index')
@@ -20,14 +21,29 @@ def create_auto():
     context = None
     if request.method == 'POST':
         # Пришел запрос с методом POST (пользователь нажал на кнопку 'Добавить авто')
-        # Получаем название товара - это значение поля input с атрибутом name="name"
-        name_auto = request.form['name']
         # Получаем стоимость аренды в минуту - это значение поля input с атрибутом name="price"
         rent_price = request.form['price']
+        k = rent_price.find(',')
+        if k != -1:
+            rent_price = rent_price[:k] + '.' + rent_price[k+1:]
+        try:
+            rent_price = abs(float(rent_price))
+        except:
+            context = {'message': '- Стоимость аренды должна быть задана числом!'}
+            return render_template('create_auto.html', **context)
+
+        # Получаем имя файла картинки автомобиля - это значение поля input с атрибутом name="img_url"
+        img_auto = request.form['img_url']
+        # Проверяем есть ли данный файл среди доступных в папке auto
+        if img_auto not in os.listdir('app/static/assets/images/auto'):
+            context = {'message': '- Файл картинки должен быть из списка доступных!'}
+            return render_template('create_auto.html', **context)
+
+        # Получаем название товара - это значение поля input с атрибутом name="name"
+        name_auto = request.form['name']
         # Получаем описание автомобиля - это значение поля input с атрибутом name="description"
         description_auto = request.form['description']
-        # Получаем описание автомобиля - это значение поля input с атрибутом name="img_url"
-        img_auto = request.form['img_url']
+        
         # Получаем тип корбки передач автомобиля - это значение поля input с атрибутом name="transmission"
         transmission_auto = request.form['transmission']
         # Добавляем автомобиль в базу данных Auto
@@ -72,10 +88,42 @@ def auto_detail(id_auto):
     auto = Auto.query.get(id_auto)
     context = None
     if request.method == 'POST':
-        auto.name = request.form['name']
-        auto.price = request.form['price']
+        
         auto.description = request.form['description']
         auto.transmission = request.form['transmission']
+        auto.name = request.form['name']
+        
+        rent_price = request.form['price']
+        k = rent_price.find(',')
+        if k != -1:
+            rent_price = rent_price[:k] + '.' + rent_price[k+1:]
+        try:
+            rent_price = abs(float(rent_price))
+            auto.price = rent_price
+        except:
+            context = {
+                'id_auto': auto.id,
+                'name_auto': auto.name,
+                'in_rent_or_free': auto.dostup,
+                'auto_transmission': auto.transmission,
+                'auto_description': auto.description,
+                'price': auto.price,
+                'img_url': auto.img_url,
+                'message': '- Стоимость аренды должна быть задана числом!'}
+            return render_template('correct_auto.html', **context)
+
+        if request.form['new_img_url'] not in os.listdir('app/static/assets/images/auto'):
+            context = {
+                'id_auto': auto.id,
+                'name_auto': auto.name,
+                'in_rent_or_free': auto.dostup,
+                'auto_transmission': auto.transmission,
+                'auto_description': auto.description,
+                'price': auto.price,
+                'img_url': auto.img_url,
+                'message': '- Файл картинки должен быть из списка доступных!'
+            }
+            return render_template('correct_auto.html', **context)
         auto.img_url = request.form['new_img_url']
         
         db.session.commit()
